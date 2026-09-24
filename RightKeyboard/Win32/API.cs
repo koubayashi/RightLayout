@@ -87,12 +87,16 @@ namespace RightKeyboard.Win32 {
 		public static string GetRawInputDeviceName(IntPtr deviceHandle) {
 			uint dataSize = 0;
 			int res = GetRawInputDeviceInfo(deviceHandle, RIDI_DEVICENAME, null, ref dataSize);
-			Debug.Assert(res == 0);
-			Debug.Assert(dataSize > 0);
+			if(res != 0 || dataSize == 0) {
+				// No such device (e.g. injected input, or the device disconnected)
+				return null;
+			}
 
 			StringBuilder buffer = new StringBuilder((int)dataSize);
 			res = GetRawInputDeviceInfo(deviceHandle, RIDI_DEVICENAME, buffer, ref dataSize);
-			Debug.Assert(res > 0);
+			if(res <= 0) {
+				return null;
+			}
 
 			return buffer.ToString();
 		}

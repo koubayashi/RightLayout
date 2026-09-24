@@ -16,9 +16,8 @@ namespace RightKeyboard {
 		private bool selectingLayout = false;
 		private LayoutSelectionDialog layoutSelectionDialog = new LayoutSelectionDialog();
 
-		private Dictionary<IntPtr, ushort> languageMappings = new Dictionary<IntPtr, ushort>();
-
-		private Dictionary<string, IntPtr> devicesByName = new Dictionary<string, IntPtr>();
+		// Keyed by raw input device name, which (unlike the device handle) stays the same across reconnects
+		private Dictionary<string, ushort> languageMappings = new Dictionary<string, ushort>(StringComparer.OrdinalIgnoreCase);
 
 		public MainForm() {
 			InitializeComponent();
@@ -32,7 +31,6 @@ namespace RightKeyboard {
 
 			WindowState = FormWindowState.Minimized;
 
-			LoadDeviceList();
 			LoadConfiguration();
 		}
 
@@ -45,11 +43,8 @@ namespace RightKeyboard {
 			try {
 				string configFilePath = GetConfigFilePath();
 				using(TextWriter output = File.CreateText(configFilePath)) {
-					foreach(KeyValuePair<string, IntPtr> entry in devicesByName) {
-						ushort layout;
-						if(languageMappings.TryGetValue(entry.Value, out layout)) {
-							output.WriteLine("{0}={1:X04}", entry.Key, layout);
-						}
+					foreach(KeyValuePair<string, ushort> entry in languageMappings) {
+						output.WriteLine("{0}={1:X04}", entry.Key, entry.Value);
 					}
 				}
 			}
@@ -65,15 +60,16 @@ namespace RightKeyboard {
 					using(TextReader input = File.OpenText(configFilePath)) {
 						string line;
 						while((line = input.ReadLine()) != null) {
-							string[] parts = line.Split('=');
-							Debug.Assert(parts.Length == 2);
+							int separator = line.LastIndexOf('=');
+							if(separator <= 0) {
+								continue;
+							}
 
-							string deviceName = parts[0];
-							ushort layout = ushort.Parse(parts[1], NumberStyles.HexNumber);
-
-							IntPtr deviceHandle;
-							if(devicesByName.TryGetValue(deviceName, out deviceHandle)) {
-								languageMappings.Add(deviceHandle, layout);
+							string deviceName = line.Substring(0, separator);
+							ushort layout;
+							if(ushort.TryParse(line.Substring(separator + 1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out layout)) {
+								// Keep the mapping even if the device isn't connected right now
+								languageMappings[deviceName] = layout;
 							}
 						}
 					}
@@ -91,16 +87,6 @@ namespace RightKeyboard {
 			}
 
 			return Path.Combine(configFileDir, "config.txt");
-		}
-
-		private void LoadDeviceList() {
-			foreach(API.RAWINPUTDEVICELIST rawInputDevice in API.GetRawInputDeviceList()) {
-				if(rawInputDevice.dwType == API.RIM_TYPEKEYBOARD) {
-					IntPtr deviceHandle = rawInputDevice.hDevice;
-					string deviceName = API.GetRawInputDeviceName(deviceHandle);
-					devicesByName.Add(deviceName, deviceHandle);
-				}
-			}
 		}
 
 		protected override void OnLoad(EventArgs e) {
@@ -196,13 +182,20 @@ namespace RightKeyboard {
 		}
 
 		private void ValidateCurrentDevice(IntPtr hCurrentDevice) {
+			string deviceName = API.GetRawInputDeviceName(hCurrentDevice);
+			if (string.IsNullOrEmpty(deviceName)) {
+				// Injected input (on-screen keyboard, remote desktop) or a device that just disconnected
+				return;
+			}
+
 			ushort layout;
-			if (!languageMappings.TryGetValue(hCurrentDevice, out layout)) {
+			if (!languageMappings.TryGetValue(deviceName, out layout)) {
 				selectingLayout = true;
 				layoutSelectionDialog.ShowDialog();
 				selectingLayout = false;
 				layout = layoutSelectionDialog.Layout.Identifier;
-				languageMappings.Add(hCurrentDevice, layout);
+				languageMappings[deviceName] = layout;
+				SaveConfiguration();
 			}
 
 			ushort currentSysLayout = (ushort)API.GetKeyboardLayout().ToInt32();
@@ -237,7 +230,8 @@ namespace RightKeyboard {
 
 		private void clearToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			languageMappings = new Dictionary<IntPtr, ushort>();
+			languageMappings.Clear();
+			SaveConfiguration();
 		}
 
 		private void exitToolStripMenuItem_Click(object sender, EventArgs e) {
