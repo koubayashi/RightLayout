@@ -36,6 +36,8 @@ namespace RightKeyboard {
 
 			WindowState = FormWindowState.Minimized;
 
+			Icon = Theme.AppIcon;
+			notifyIcon.Icon = new Icon(Theme.AppIcon, SystemInformation.SmallIconSize);
 			Theme.StyleMenu(contextMenuStrip);
 			settings.Load();
 		}
@@ -252,8 +254,8 @@ namespace RightKeyboard {
 		private void clearToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			DialogResult answer = MessageBox.Show(
-				"Forget all saved keyboards?\n\nRightKeyboard will ask for the input method again the next time you type on each keyboard.",
-				"RightKeyboard", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+				"Forget all saved keyboards?\n\nRightLayout will ask for the input method again the next time you type on each keyboard.",
+				"RightLayout", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
 			if(answer == DialogResult.Yes) {
 				skippedThisSession.Clear();
 				settings.Clear();

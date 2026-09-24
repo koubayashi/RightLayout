@@ -21,7 +21,7 @@ namespace RightKeyboard {
 			this.settings = settings;
 
 			Theme.ApplyTo(this, Theme.Window);
-			Text = "RightKeyboard";
+			Text = "RightLayout";
 			StartPosition = FormStartPosition.CenterScreen;
 			Size = new Size(Theme.S(740), Theme.S(640));
 			MinimumSize = new Size(Theme.S(580), Theme.S(420));
@@ -37,7 +37,7 @@ namespace RightKeyboard {
 			title.Location = new Point(Theme.S(24), Theme.S(20));
 
 			Label subtitle = new Label();
-			subtitle.Text = "RightKeyboard switches to each keyboard's input method as soon as you type on it.";
+			subtitle.Text = "RightLayout switches to each keyboard's input method as soon as you type on it.";
 			subtitle.ForeColor = Theme.SubText;
 			subtitle.AutoSize = true;
 			subtitle.Location = new Point(Theme.S(29), Theme.S(66));
@@ -171,14 +171,14 @@ namespace RightKeyboard {
 
 			rows.Add(new SectionHeader("Your keyboards", saved.Count == 0 ? null : "Changes are saved right away and kept until you forget the keyboard."));
 			if(saved.Count == 0) {
-				rows.Add(new MessageCard("No keyboards saved yet", "Type on any keyboard and RightKeyboard will ask which input method it should use."));
+				rows.Add(new MessageCard("No keyboards saved yet", "Type on any keyboard and RightLayout will ask which input method it should use."));
 			}
 			foreach(KeyboardGroup group in saved) {
 				AddCard(group, names[group], installedLayouts);
 			}
 
 			if(others.Count > 0) {
-				rows.Add(new SectionHeader("Other connected keyboards", "Choose an input method here, or just start typing on the keyboard and RightKeyboard will ask."));
+				rows.Add(new SectionHeader("Other connected keyboards", "Choose an input method here, or just start typing on the keyboard and RightLayout will ask."));
 				foreach(KeyboardGroup group in others) {
 					AddCard(group, names[group], installedLayouts);
 				}
@@ -288,8 +288,8 @@ namespace RightKeyboard {
 
 		private void ForgetAll() {
 			DialogResult answer = MessageBox.Show(this,
-				"Forget all saved keyboards?\n\nRightKeyboard will ask for the input method again the next time you type on each keyboard.",
-				"RightKeyboard", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+				"Forget all saved keyboards?\n\nRightLayout will ask for the input method again the next time you type on each keyboard.",
+				"RightLayout", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
 			if(answer == DialogResult.Yes) {
 				settings.Clear();
 			}

@@ -19,7 +19,7 @@ namespace RightKeyboard {
 			KeyboardDeviceInfo device = KeyboardDevices.Get(deviceName);
 
 			Theme.ApplyTo(this, Theme.Card);
-			Text = "RightKeyboard";
+			Text = "RightLayout";
 			FormBorderStyle = FormBorderStyle.FixedDialog;
 			MaximizeBox = false;
 			MinimizeBox = false;

@@ -57,7 +57,10 @@ namespace RightKeyboard {
 			get {
 				if(appIcon == null) {
 					try {
-						appIcon = System.Drawing.Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+						// The embedded copy has every size, unlike the single one Windows extracts from the exe
+						using(System.IO.Stream input = typeof(Theme).Assembly.GetManifestResourceStream("RightKeyboard.RightLayout.ico")) {
+							appIcon = new Icon(input);
+						}
 					}
 					catch(Exception) {
 						appIcon = SystemIcons.Application;

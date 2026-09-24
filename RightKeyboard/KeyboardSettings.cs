@@ -7,7 +7,7 @@ using System.Windows.Forms;
 
 namespace RightKeyboard {
 	/// <summary>
-	/// A keyboard RightKeyboard remembers
+	/// A keyboard RightLayout remembers
 	/// </summary>
 	public class KeyboardEntry {
 		/// <summary>
@@ -27,7 +27,7 @@ namespace RightKeyboard {
 	}
 
 	/// <summary>
-	/// Stores which input method each keyboard uses, in %LOCALAPPDATA%\RightKeyboard\config.txt
+	/// Stores which input method each keyboard uses, in %LOCALAPPDATA%\RightLayout\config.txt
 	/// </summary>
 	public class KeyboardSettings {
 		/// <summary>
@@ -137,7 +137,7 @@ namespace RightKeyboard {
 				}
 			}
 			catch(Exception err) {
-				MessageBox.Show("Could not save the configuration. Reason: " + err.Message, "RightKeyboard", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+				MessageBox.Show("Could not save the configuration. Reason: " + err.Message, "RightLayout", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 			}
 		}
 
@@ -157,7 +157,7 @@ namespace RightKeyboard {
 				}
 			}
 			catch(Exception err) {
-				MessageBox.Show("Could not load the configuration. Reason: " + err.Message, "RightKeyboard", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+				MessageBox.Show("Could not load the configuration. Reason: " + err.Message, "RightLayout", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 			}
 		}
 
@@ -198,12 +198,22 @@ namespace RightKeyboard {
 		}
 
 		private static string GetConfigFilePath() {
-			string configFileDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "RightKeyboard");
+			string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+			string configFileDir = Path.Combine(localAppData, "RightLayout");
 			if(!Directory.Exists(configFileDir)) {
 				Directory.CreateDirectory(configFileDir);
 			}
 
-			return Path.Combine(configFileDir, "config.txt");
+			string configFilePath = Path.Combine(configFileDir, "config.txt");
+
+			// Bring over the keyboards saved when the app was called RightKeyboard; the old file is left
+			// in place so older versions keep working
+			string oldConfigFilePath = Path.Combine(Path.Combine(localAppData, "RightKeyboard"), "config.txt");
+			if(!File.Exists(configFilePath) && File.Exists(oldConfigFilePath)) {
+				File.Copy(oldConfigFilePath, configFilePath);
+			}
+
+			return configFilePath;
 		}
 	}
 }

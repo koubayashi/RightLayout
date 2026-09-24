@@ -24,7 +24,6 @@ namespace RightKeyboard {
 		/// </summary>
 		private void InitializeComponent() {
 			this.components = new System.ComponentModel.Container();
-			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
 			this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
 			this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
 			this.keyboardsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -37,8 +36,7 @@ namespace RightKeyboard {
 			// notifyIcon
 			// 
 			this.notifyIcon.ContextMenuStrip = this.contextMenuStrip;
-			this.notifyIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon.Icon")));
-			this.notifyIcon.Text = "RightKeyboard";
+			this.notifyIcon.Text = "RightLayout";
 			this.notifyIcon.Visible = true;
 			this.notifyIcon.MouseClick += new System.Windows.Forms.MouseEventHandler(this.notifyIcon_MouseClick);
 			// 
@@ -83,10 +81,9 @@ namespace RightKeyboard {
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(206, 122);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
-			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
 			this.Name = "MainForm";
 			this.ShowInTaskbar = false;
-			this.Text = "RightKeyboard";
+			this.Text = "RightLayout";
 			this.contextMenuStrip.ResumeLayout(false);
 			this.ResumeLayout(false);
 
