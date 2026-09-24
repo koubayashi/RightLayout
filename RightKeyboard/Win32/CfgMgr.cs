@@ -27,6 +27,14 @@ namespace RightKeyboard.Win32 {
 		public static readonly DEVPROPKEY DEVPKEY_Device_DeviceDesc = new DEVPROPKEY("a45c254e-df1c-4efd-8020-67d146a850e0", 2);
 		public static readonly DEVPROPKEY DEVPKEY_Device_FriendlyName = new DEVPROPKEY("a45c254e-df1c-4efd-8020-67d146a850e0", 14);
 		public static readonly DEVPROPKEY DEVPKEY_Device_BusReportedDeviceDesc = new DEVPROPKEY("540b947e-8b40-45bc-a8a2-6a0b894cbda2", 4);
+		public static readonly DEVPROPKEY DEVPKEY_Device_ContainerId = new DEVPROPKEY("8c7ed206-3f8a-4827-b3ab-ae9e1faefc6c", 2);
+
+		/// <summary>
+		/// Container ID Windows gives to devices that are built into the computer
+		/// </summary>
+		public static readonly Guid LocalMachineContainer = new Guid("00000000-0000-0000-ffff-ffffffffffff");
+
+		private const uint DEVPROP_TYPE_GUID = 0x0000000D;
 
 		[DllImport("cfgmgr32.dll", CharSet = CharSet.Unicode)]
 		private static extern int CM_Locate_DevNodeW(out uint pdnDevInst, string pDeviceID, uint ulFlags);
@@ -84,6 +92,16 @@ namespace RightKeyboard.Win32 {
 				return null;
 			}
 			return Encoding.Unicode.GetString(buffer, 0, (int)size).TrimEnd('\0');
+		}
+
+		public static Guid GetGuid(uint devInst, DEVPROPKEY key) {
+			uint type;
+			uint size = 16;
+			byte[] buffer = new byte[size];
+			if(CM_Get_DevNode_PropertyW(devInst, ref key, out type, buffer, ref size, 0) != CR_SUCCESS || type != DEVPROP_TYPE_GUID || size != 16) {
+				return Guid.Empty;
+			}
+			return new Guid(buffer);
 		}
 
 		/// <summary>

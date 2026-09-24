@@ -53,31 +53,67 @@ namespace RightKeyboard {
 		}
 
 		public void SetLayout(string deviceName, ushort layout) {
-			KeyboardEntry entry = Get(deviceName);
-			if(entry == null) {
-				entry = new KeyboardEntry();
-				entry.DeviceName = deviceName;
-				entries.Add(deviceName, entry);
+			SetLayout(new string[] { deviceName }, layout);
+		}
+
+		/// <summary>
+		/// Sets the input method of several devices at once, e.g. all the parts of one keyboard
+		/// </summary>
+		public void SetLayout(IEnumerable<string> deviceNames, ushort layout) {
+			foreach(string deviceName in deviceNames) {
+				KeyboardEntry entry = Get(deviceName);
+				if(entry == null) {
+					entry = new KeyboardEntry();
+					entry.DeviceName = deviceName;
+					entries.Add(deviceName, entry);
+				}
+				entry.Layout = layout;
 			}
-			entry.Layout = layout;
 			SaveAndNotify();
 		}
 
-		public void SetNickname(string deviceName, string nickname) {
-			KeyboardEntry entry = Get(deviceName);
-			if(entry == null) {
-				return;
-			}
-
+		/// <summary>
+		/// Names the saved devices among deviceNames; an empty name goes back to the detected one
+		/// </summary>
+		public void SetNickname(IEnumerable<string> deviceNames, string nickname) {
 			nickname = (nickname ?? "").Replace('\t', ' ').Replace('\r', ' ').Replace('\n', ' ').Trim();
-			entry.Nickname = nickname.Length == 0 ? null : nickname;
+			foreach(string deviceName in deviceNames) {
+				KeyboardEntry entry = Get(deviceName);
+				if(entry != null) {
+					entry.Nickname = nickname.Length == 0 ? null : nickname;
+				}
+			}
 			SaveAndNotify();
 		}
 
-		public void Remove(string deviceName) {
-			if(entries.Remove(deviceName)) {
+		public void Remove(IEnumerable<string> deviceNames) {
+			bool removed = false;
+			foreach(string deviceName in deviceNames) {
+				removed |= entries.Remove(deviceName);
+			}
+			if(removed) {
 				SaveAndNotify();
 			}
+		}
+
+		/// <summary>
+		/// Gets the input method already chosen for another part of the same physical keyboard.
+		/// Fails when none is saved, or when the saved parts disagree.
+		/// </summary>
+		public bool TryGetGroupLayout(string deviceName, out ushort layout) {
+			layout = NoSwitch;
+			string groupKey = KeyboardDevices.Get(deviceName).GroupKey;
+			bool found = false;
+			foreach(KeyboardEntry entry in entries.Values) {
+				if(KeyboardDevices.Get(entry.DeviceName).GroupKey == groupKey) {
+					if(found && entry.Layout != layout) {
+						return false;
+					}
+					layout = entry.Layout;
+					found = true;
+				}
+			}
+			return found;
 		}
 
 		public void Clear() {

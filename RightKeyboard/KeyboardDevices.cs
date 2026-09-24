@@ -18,15 +18,27 @@ namespace RightKeyboard {
 	public class KeyboardDeviceInfo {
 		private readonly KeyboardKind kind;
 		private readonly string productName;
+		private readonly string groupKey;
 
-		public KeyboardDeviceInfo(KeyboardKind kind, string productName) {
+		public KeyboardDeviceInfo(KeyboardKind kind, string productName, string groupKey) {
 			this.kind = kind;
 			this.productName = productName;
+			this.groupKey = groupKey;
 		}
 
 		public KeyboardKind Kind {
 			get {
 				return kind;
+			}
+		}
+
+		/// <summary>
+		/// Identifies the physical keyboard. Windows lists one keyboard as several devices (main keys,
+		/// media keys, ...), which all share the same group key.
+		/// </summary>
+		public string GroupKey {
+			get {
+				return groupKey;
 			}
 		}
 
@@ -41,6 +53,103 @@ namespace RightKeyboard {
 	}
 
 	/// <summary>
+	/// One physical keyboard with all the devices Windows lists for it, and what is saved for them
+	/// </summary>
+	public class KeyboardGroup {
+		public readonly string Key;
+		public readonly List<string> DeviceNames = new List<string>();
+		public readonly List<KeyboardEntry> SavedEntries = new List<KeyboardEntry>();
+		public KeyboardKind Kind;
+		public string DetectedName;
+		public bool Connected;
+
+		public KeyboardGroup(string key) {
+			Key = key;
+		}
+
+		public bool IsSaved {
+			get {
+				return SavedEntries.Count > 0;
+			}
+		}
+
+		/// <summary>
+		/// True when the saved devices of this keyboard use different input methods
+		/// </summary>
+		public bool IsMixed {
+			get {
+				foreach(KeyboardEntry entry in SavedEntries) {
+					if(entry.Layout != SavedEntries[0].Layout) {
+						return true;
+					}
+				}
+				return false;
+			}
+		}
+
+		public ushort Layout {
+			get {
+				return SavedEntries[0].Layout;
+			}
+		}
+
+		public string Nickname {
+			get {
+				foreach(KeyboardEntry entry in SavedEntries) {
+					if(entry.Nickname != null) {
+						return entry.Nickname;
+					}
+				}
+				return null;
+			}
+		}
+
+		public string DisplayName {
+			get {
+				return Nickname ?? DetectedName;
+			}
+		}
+
+		/// <summary>
+		/// Groups the saved keyboards and the connected ones by physical keyboard
+		/// </summary>
+		public static List<KeyboardGroup> Build(List<KeyboardEntry> savedEntries, List<string> connectedDevices) {
+			List<KeyboardGroup> groups = new List<KeyboardGroup>();
+			Dictionary<string, KeyboardGroup> byKey = new Dictionary<string, KeyboardGroup>(StringComparer.OrdinalIgnoreCase);
+
+			foreach(KeyboardEntry entry in savedEntries) {
+				KeyboardGroup group = GetOrAdd(entry.DeviceName, groups, byKey);
+				group.SavedEntries.Add(entry);
+			}
+			foreach(string deviceName in connectedDevices) {
+				KeyboardGroup group = GetOrAdd(deviceName, groups, byKey);
+				group.Connected = true;
+			}
+			return groups;
+		}
+
+		private static KeyboardGroup GetOrAdd(string deviceName, List<KeyboardGroup> groups, Dictionary<string, KeyboardGroup> byKey) {
+			KeyboardDeviceInfo info = KeyboardDevices.Get(deviceName);
+			KeyboardGroup group;
+			if(!byKey.TryGetValue(info.GroupKey, out group)) {
+				group = new KeyboardGroup(info.GroupKey);
+				group.Kind = info.Kind;
+				group.DetectedName = info.DisplayName;
+				groups.Add(group);
+				byKey.Add(info.GroupKey, group);
+			}
+			if(!group.DeviceNames.Contains(deviceName)) {
+				group.DeviceNames.Add(deviceName);
+				// Prefer a real product name over "Bluetooth keyboard" if another part of the keyboard has one
+				if(group.DetectedName == KeyboardDevices.GetFallbackName(group.Kind) && info.DisplayName != group.DetectedName) {
+					group.DetectedName = info.DisplayName;
+				}
+			}
+			return group;
+		}
+	}
+
+	/// <summary>
 	/// Looks up connected keyboards and turns raw input device names into something readable
 	/// </summary>
 	public static class KeyboardDevices {
@@ -49,7 +158,7 @@ namespace RightKeyboard {
 		// Names Windows gives to every keyboard, which don't help tell keyboards apart
 		private static readonly string[] genericNames = {
 			"hid keyboard", "hid-compliant", "hid device", "usb input device", "gatt compliant",
-			"usb composite device", "standard ps/2", "enumerator", "hub"
+			"usb composite device", "standard ps/2", "enumerator", "hub", "bluetooth le service", "bluetooth le device"
 		};
 
 		private const string BluetoothBaseUuid = "00805F9B34FB";
@@ -78,7 +187,7 @@ namespace RightKeyboard {
 					info = Inspect(deviceName);
 				}
 				catch(Exception) {
-					info = new KeyboardDeviceInfo(KeyboardKind.Other, null);
+					info = new KeyboardDeviceInfo(KeyboardKind.Other, null, "device:" + deviceName);
 				}
 				cache[deviceName] = info;
 			}
@@ -145,11 +254,25 @@ namespace RightKeyboard {
 			}
 
 			KeyboardKind kind = DetectKind(deviceName.ToUpperInvariant(), ids);
+
+			// All parts of one physical device share a container ID
+			Guid container = nodes.Count > 0 ? CfgMgr.GetGuid(nodes[0], CfgMgr.DEVPKEY_Device_ContainerId) : Guid.Empty;
+			if(kind == KeyboardKind.Remote || container == Guid.Empty) {
+				return new KeyboardDeviceInfo(kind, FindName(kind, ids, nodes), "device:" + deviceName);
+			}
+			if(container == CfgMgr.LocalMachineContainer) {
+				// Built into the computer, even when wired internally over USB (e.g. a Fn/hotkey controller)
+				return new KeyboardDeviceInfo(KeyboardKind.BuiltIn, null, "container:local");
+			}
+			return new KeyboardDeviceInfo(kind, FindName(kind, ids, nodes), "container:" + container.ToString("D"));
+		}
+
+		private static string FindName(KeyboardKind kind, List<string> ids, List<uint> nodes) {
 			string name = FindProductName(kind, ids, nodes);
 			if(name == null && kind == KeyboardKind.Bluetooth) {
 				name = FindBluetoothDeviceName(ids);
 			}
-			return new KeyboardDeviceInfo(kind, name);
+			return name;
 		}
 
 		/// <summary>
@@ -271,6 +394,10 @@ namespace RightKeyboard {
 		}
 
 		private static bool IsGeneric(string name) {
+			// Names with a {GUID} describe a service, not a product
+			if(name.Contains("{")) {
+				return true;
+			}
 			string lower = name.ToLowerInvariant();
 			foreach(string generic in genericNames) {
 				if(lower.Contains(generic)) {

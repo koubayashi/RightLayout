@@ -180,18 +180,10 @@ namespace RightKeyboard {
 					return;
 				}
 
-				selectingLayout = true;
-				try {
-					using (LayoutSelectionDialog dialog = new LayoutSelectionDialog(deviceName)) {
-						if (dialog.ShowDialog() != DialogResult.OK) {
-							skippedThisSession[deviceName] = true;
-							return;
-						}
-						layout = dialog.SelectedLayout;
-					}
-				}
-				finally {
-					selectingLayout = false;
+				// Another part of this keyboard (e.g. its media keys) may already have an input method
+				if (!settings.TryGetGroupLayout(deviceName, out layout) && !AskForLayout(deviceName, out layout)) {
+					skippedThisSession[deviceName] = true;
+					return;
 				}
 				settings.SetLayout(deviceName, layout);
 			}
@@ -206,6 +198,23 @@ namespace RightKeyboard {
 			{
 				SetCurrentLayout(layout);
 				SetDefaultLayout(layout);
+			}
+		}
+
+		private bool AskForLayout(string deviceName, out ushort layout) {
+			layout = KeyboardSettings.NoSwitch;
+			selectingLayout = true;
+			try {
+				using (LayoutSelectionDialog dialog = new LayoutSelectionDialog(deviceName)) {
+					if (dialog.ShowDialog() != DialogResult.OK) {
+						return false;
+					}
+					layout = dialog.SelectedLayout;
+					return true;
+				}
+			}
+			finally {
+				selectingLayout = false;
 			}
 		}
 

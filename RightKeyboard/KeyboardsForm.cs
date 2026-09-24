@@ -138,30 +138,25 @@ namespace RightKeyboard {
 			}
 
 			Layout[] installedLayouts = RightKeyboard.Layout.GetInstalledLayouts();
-			List<string> connected = KeyboardDevices.GetConnected();
-			Dictionary<string, bool> isConnected = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
-			foreach(string deviceName in connected) {
-				isConnected[deviceName] = true;
-			}
-
-			List<KeyboardEntry> saved = settings.GetAll();
-			List<string> others = new List<string>();
-			foreach(string deviceName in connected) {
-				if(settings.Get(deviceName) == null && KeyboardDevices.Get(deviceName).Kind != KeyboardKind.Remote && !others.Contains(deviceName)) {
-					others.Add(deviceName);
+			List<KeyboardGroup> saved = new List<KeyboardGroup>();
+			List<KeyboardGroup> others = new List<KeyboardGroup>();
+			foreach(KeyboardGroup group in KeyboardGroup.Build(settings.GetAll(), KeyboardDevices.GetConnected())) {
+				if(group.IsSaved) {
+					saved.Add(group);
+				}
+				else if(group.Kind != KeyboardKind.Remote) {
+					others.Add(group);
 				}
 			}
 
-			Dictionary<string, string> names = GetUniqueNames(saved, others);
-			saved.Sort(delegate(KeyboardEntry a, KeyboardEntry b) {
-				bool aConnected = isConnected.ContainsKey(a.DeviceName);
-				bool bConnected = isConnected.ContainsKey(b.DeviceName);
-				if(aConnected != bConnected) {
-					return aConnected ? -1 : 1;
+			Dictionary<KeyboardGroup, string> names = GetUniqueNames(saved, others);
+			saved.Sort(delegate(KeyboardGroup a, KeyboardGroup b) {
+				if(a.Connected != b.Connected) {
+					return a.Connected ? -1 : 1;
 				}
-				return string.Compare(names[a.DeviceName], names[b.DeviceName], StringComparison.CurrentCultureIgnoreCase);
+				return string.Compare(names[a], names[b], StringComparison.CurrentCultureIgnoreCase);
 			});
-			others.Sort(delegate(string a, string b) {
+			others.Sort(delegate(KeyboardGroup a, KeyboardGroup b) {
 				return string.Compare(names[a], names[b], StringComparison.CurrentCultureIgnoreCase);
 			});
 
@@ -178,14 +173,14 @@ namespace RightKeyboard {
 			if(saved.Count == 0) {
 				rows.Add(new MessageCard("No keyboards saved yet", "Type on any keyboard and RightKeyboard will ask which input method it should use."));
 			}
-			foreach(KeyboardEntry entry in saved) {
-				AddCard(entry.DeviceName, names[entry.DeviceName], isConnected.ContainsKey(entry.DeviceName), entry, installedLayouts);
+			foreach(KeyboardGroup group in saved) {
+				AddCard(group, names[group], installedLayouts);
 			}
 
 			if(others.Count > 0) {
-				rows.Add(new SectionHeader("Other connected keyboards", "Windows sometimes lists extra entries for media keys or hotkeys. You only need to set up the keyboards you type on."));
-				foreach(string deviceName in others) {
-					AddCard(deviceName, names[deviceName], true, null, installedLayouts);
+				rows.Add(new SectionHeader("Other connected keyboards", "Choose an input method here, or just start typing on the keyboard and RightKeyboard will ask."));
+				foreach(KeyboardGroup group in others) {
+					AddCard(group, names[group], installedLayouts);
 				}
 			}
 
@@ -204,56 +199,51 @@ namespace RightKeyboard {
 			}
 		}
 
-		private void AddCard(string deviceName, string displayName, bool connected, KeyboardEntry entry, Layout[] installedLayouts) {
-			KeyboardDeviceInfo device = KeyboardDevices.Get(deviceName);
-			KeyboardCard card = new KeyboardCard(displayName, device.Kind, connected, entry, installedLayouts);
+		private void AddCard(KeyboardGroup group, string displayName, Layout[] installedLayouts) {
+			// Everything the card changes applies to all the devices Windows lists for this keyboard
+			List<string> deviceNames = group.DeviceNames;
+			KeyboardCard card = new KeyboardCard(displayName, group, installedLayouts);
 			card.LayoutChosen = delegate(ushort layout) {
-				settings.SetLayout(deviceName, layout);
+				settings.SetLayout(deviceNames, layout);
 			};
 			card.Renamed = delegate(string name) {
-				settings.SetNickname(deviceName, name == device.DisplayName ? null : name);
+				settings.SetNickname(deviceNames, name == group.DetectedName ? null : name);
 			};
 			card.Forgotten = delegate {
-				settings.Remove(deviceName);
+				settings.Remove(deviceNames);
 			};
 			rows.Add(card);
-			cards[deviceName] = card;
+			foreach(string deviceName in deviceNames) {
+				cards[deviceName] = card;
+			}
 		}
 
 		/// <summary>
 		/// Picks the name shown for each keyboard, numbering keyboards that would otherwise look the same
 		/// </summary>
-		private static Dictionary<string, string> GetUniqueNames(List<KeyboardEntry> saved, List<string> others) {
-			List<string> deviceNames = new List<string>();
-			Dictionary<string, string> names = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-			foreach(KeyboardEntry entry in saved) {
-				deviceNames.Add(entry.DeviceName);
-				names[entry.DeviceName] = entry.Nickname ?? KeyboardDevices.Get(entry.DeviceName).DisplayName;
-			}
-			foreach(string deviceName in others) {
-				deviceNames.Add(deviceName);
-				names[deviceName] = KeyboardDevices.Get(deviceName).DisplayName;
-			}
+		private static Dictionary<KeyboardGroup, string> GetUniqueNames(List<KeyboardGroup> saved, List<KeyboardGroup> others) {
+			List<KeyboardGroup> groups = new List<KeyboardGroup>(saved);
+			groups.AddRange(others);
 
 			Dictionary<string, int> totals = new Dictionary<string, int>(StringComparer.CurrentCultureIgnoreCase);
-			foreach(string deviceName in deviceNames) {
+			foreach(KeyboardGroup group in groups) {
 				int count;
-				totals.TryGetValue(names[deviceName], out count);
-				totals[names[deviceName]] = count + 1;
+				totals.TryGetValue(group.DisplayName, out count);
+				totals[group.DisplayName] = count + 1;
 			}
 
 			Dictionary<string, int> seen = new Dictionary<string, int>(StringComparer.CurrentCultureIgnoreCase);
-			Dictionary<string, string> result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-			foreach(string deviceName in deviceNames) {
-				string name = names[deviceName];
+			Dictionary<KeyboardGroup, string> result = new Dictionary<KeyboardGroup, string>();
+			foreach(KeyboardGroup group in groups) {
+				string name = group.DisplayName;
 				if(totals[name] > 1) {
 					int number;
 					seen.TryGetValue(name, out number);
 					seen[name] = ++number;
-					result[deviceName] = name + " (" + number + ")";
+					result[group] = name + " (" + number + ")";
 				}
 				else {
-					result[deviceName] = name;
+					result[group] = name;
 				}
 			}
 			return result;
@@ -322,13 +312,13 @@ namespace RightKeyboard {
 		public Action<string> Renamed;
 		public Action Forgotten;
 
-		public KeyboardCard(string displayName, KeyboardKind kind, bool connected, KeyboardEntry entry, Layout[] installedLayouts) {
+		public KeyboardCard(string displayName, KeyboardGroup group, Layout[] installedLayouts) {
 			Height = Theme.S(72);
-			details = KeyboardDevices.GetKindName(kind) + "  ·  " + (connected ? "Connected" : "Not connected");
+			details = KeyboardDevices.GetKindName(group.Kind) + "  ·  " + (group.Connected ? "Connected" : "Not connected");
 
-			iconLabel.Text = KeyboardDevices.GetIconGlyph(kind);
+			iconLabel.Text = KeyboardDevices.GetIconGlyph(group.Kind);
 			iconLabel.Font = Theme.IconFont;
-			iconLabel.ForeColor = connected ? Theme.Text : Theme.DisabledText;
+			iconLabel.ForeColor = group.Connected ? Theme.Text : Theme.DisabledText;
 			iconLabel.TextAlign = ContentAlignment.MiddleCenter;
 
 			nameLabel.Text = displayName;
@@ -341,7 +331,7 @@ namespace RightKeyboard {
 			detailsLabel.ForeColor = Theme.SubText;
 			detailsLabel.AutoEllipsis = true;
 
-			FillLayoutChoices(entry, installedLayouts);
+			FillLayoutChoices(group, installedLayouts);
 			layoutBox.SelectionChangeCommitted += delegate {
 				LayoutChoice choice = layoutBox.SelectedItem as LayoutChoice;
 				if(choice != null && !choice.IsPlaceholder && LayoutChosen != null) {
@@ -354,8 +344,8 @@ namespace RightKeyboard {
 			Controls.Add(detailsLabel);
 			Controls.Add(layoutBox);
 
-			if(entry != null) {
-				btMore = new ModernButton("", false);
+			if(group.IsSaved) {
+				btMore = new ModernButton("", false);		// More
 				btMore.Font = Theme.SmallIconFont;
 				btMore.Size = new Size(Theme.S(32), Theme.S(32));
 				btMore.Click += delegate { ShowMenu(); };
@@ -398,10 +388,12 @@ namespace RightKeyboard {
 			}
 		}
 
-		private void FillLayoutChoices(KeyboardEntry entry, Layout[] installedLayouts) {
+		private void FillLayoutChoices(KeyboardGroup group, Layout[] installedLayouts) {
+			// A single input method is known only when every saved part of the keyboard agrees
+			bool known = group.IsSaved && !group.IsMixed;
 			LayoutChoice selected = null;
-			if(entry == null) {
-				selected = new LayoutChoice(KeyboardSettings.NoSwitch, "Choose input method", true);
+			if(!known) {
+				selected = new LayoutChoice(KeyboardSettings.NoSwitch, group.IsSaved ? "Mixed, choose one" : "Choose input method", true);
 				layoutBox.Items.Add(selected);
 			}
 
@@ -409,20 +401,20 @@ namespace RightKeyboard {
 			foreach(Layout layout in installedLayouts) {
 				LayoutChoice choice = new LayoutChoice(layout.Identifier, layout.Name, false);
 				layoutBox.Items.Add(choice);
-				if(entry != null && entry.Layout == layout.Identifier) {
+				if(known && group.Layout == layout.Identifier) {
 					selected = choice;
 					found = true;
 				}
 			}
 
-			if(entry != null && !found && entry.Layout != KeyboardSettings.NoSwitch) {
-				selected = new LayoutChoice(entry.Layout, RightKeyboard.Layout.GetDisplayName(entry.Layout) + " (not installed)", false);
+			if(known && !found && group.Layout != KeyboardSettings.NoSwitch) {
+				selected = new LayoutChoice(group.Layout, RightKeyboard.Layout.GetDisplayName(group.Layout) + " (not installed)", false);
 				layoutBox.Items.Add(selected);
 			}
 
 			LayoutChoice noSwitch = new LayoutChoice(KeyboardSettings.NoSwitch, "Don't switch", false);
 			layoutBox.Items.Add(noSwitch);
-			if(entry != null && entry.Layout == KeyboardSettings.NoSwitch) {
+			if(known && group.Layout == KeyboardSettings.NoSwitch) {
 				selected = noSwitch;
 			}
 
