@@ -199,5 +199,25 @@ namespace RightKeyboard.Win32 {
 
 		[DllImport("user32.dll")]
 		public static extern bool SystemParametersInfo(uint uiAction, uint uiParam, IntPtr[] pvParam, uint fWinIni);
+
+		public const uint RIDEV_DEVNOTIFY = 0x00002000;
+		public const int WM_INPUT_DEVICE_CHANGE = 0x00FE;
+		public const int WM_MOUSEWHEEL = 0x020A;
+		public const int EM_SETCUEBANNER = 0x1501;
+
+		[DllImport("user32.dll")]
+		public static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+
+		[DllImport("user32.dll", CharSet = CharSet.Unicode)]
+		public static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, string lParam);
+
+		[DllImport("user32.dll")]
+		public static extern bool SetProcessDPIAware();
+
+		[DllImport("uxtheme.dll", CharSet = CharSet.Unicode)]
+		public static extern int SetWindowTheme(IntPtr hWnd, string pszSubAppName, string pszSubIdList);
+
+		[DllImport("dwmapi.dll")]
+		public static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
 	}
 }

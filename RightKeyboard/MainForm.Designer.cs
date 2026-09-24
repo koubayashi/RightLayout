@@ -27,6 +27,8 @@ namespace RightKeyboard {
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
 			this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
 			this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+			this.keyboardsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
 			this.clearToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.contextMenuStrip.SuspendLayout();
@@ -36,22 +38,36 @@ namespace RightKeyboard {
 			// 
 			this.notifyIcon.ContextMenuStrip = this.contextMenuStrip;
 			this.notifyIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon.Icon")));
-			this.notifyIcon.Text = "RightKeyboard (Right-click this icon to close)";
+			this.notifyIcon.Text = "RightKeyboard";
 			this.notifyIcon.Visible = true;
+			this.notifyIcon.MouseClick += new System.Windows.Forms.MouseEventHandler(this.notifyIcon_MouseClick);
 			// 
 			// contextMenuStrip
 			// 
 			this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.keyboardsToolStripMenuItem,
+            this.toolStripSeparator,
             this.clearToolStripMenuItem,
             this.exitToolStripMenuItem});
 			this.contextMenuStrip.Name = "contextMenuStrip";
 			this.contextMenuStrip.Size = new System.Drawing.Size(104, 26);
 			// 
+			// keyboardsToolStripMenuItem
+			// 
+			this.keyboardsToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F);
+			this.keyboardsToolStripMenuItem.Name = "keyboardsToolStripMenuItem";
+			this.keyboardsToolStripMenuItem.Text = "&Keyboards...";
+			this.keyboardsToolStripMenuItem.Click += new System.EventHandler(this.keyboardsToolStripMenuItem_Click);
+			// 
+			// toolStripSeparator
+			// 
+			this.toolStripSeparator.Name = "toolStripSeparator";
+			// 
 			// clearToolStripMenuItem
 			// 
 			this.clearToolStripMenuItem.Name = "clearToolStripMenuItem";
 			this.clearToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
-			this.clearToolStripMenuItem.Text = "&Clear";
+			this.clearToolStripMenuItem.Text = "&Forget all keyboards...";
 			this.clearToolStripMenuItem.Click += new System.EventHandler(this.clearToolStripMenuItem_Click);
 			// 
 			// exitToolStripMenuItem
@@ -80,6 +96,8 @@ namespace RightKeyboard {
 
 		private System.Windows.Forms.NotifyIcon notifyIcon;
 		private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
+		private System.Windows.Forms.ToolStripMenuItem keyboardsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripSeparator toolStripSeparator;
 		private System.Windows.Forms.ToolStripMenuItem clearToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
 	}

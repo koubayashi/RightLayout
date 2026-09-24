@@ -42,13 +42,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="KeyboardDevices.cs" />
+    <Compile Include="KeyboardSettings.cs" />
+    <Compile Include="KeyboardsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Layout.cs" />
     <Compile Include="LayoutSelectionDialog.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="LayoutSelectionDialog.Designer.cs">
-      <DependentUpon>LayoutSelectionDialog.cs</DependentUpon>
+    <Compile Include="ModernControls.cs">
+      <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Theme.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -57,10 +63,6 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="LayoutSelectionDialog.resx">
-      <SubType>Designer</SubType>
-      <DependentUpon>LayoutSelectionDialog.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <SubType>Designer</SubType>
       <DependentUpon>MainForm.cs</DependentUpon>
@@ -85,6 +87,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="Win32\API.cs" />
+    <Compile Include="Win32\CfgMgr.cs" />
     <Compile Include="Win32\RAWINPUTDEVICE.cs" />
     <Compile Include="Win32\RAWINPUTHEADER.cs" />
   </ItemGroup>

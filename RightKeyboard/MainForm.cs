@@ -14,15 +14,20 @@ using System.Globalization;
 namespace RightKeyboard {
 	public partial class MainForm : Form {
 		private bool selectingLayout = false;
-		private LayoutSelectionDialog layoutSelectionDialog = new LayoutSelectionDialog();
 
 		// Keyed by raw input device name, which (unlike the device handle) stays the same across reconnects
-		private Dictionary<string, ushort> languageMappings = new Dictionary<string, ushort>(StringComparer.OrdinalIgnoreCase);
+		private readonly KeyboardSettings settings = new KeyboardSettings();
+
+		// Keyboards whose prompt was dismissed; asked again after a restart
+		private readonly Dictionary<string, bool> skippedThisSession = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+
+		private KeyboardsForm keyboardsForm;
 
 		public MainForm() {
 			InitializeComponent();
 
-			RAWINPUTDEVICE rawInputDevice = new RAWINPUTDEVICE(1, 6, API.RIDEV_INPUTSINK, this);
+			// DEVNOTIFY sends WM_INPUT_DEVICE_CHANGE when keyboards connect or disconnect
+			RAWINPUTDEVICE rawInputDevice = new RAWINPUTDEVICE(1, 6, API.RIDEV_INPUTSINK | API.RIDEV_DEVNOTIFY, this);
 			bool ok = API.RegisterRawInputDevices(rawInputDevice);
 			if(!ok) {
 				throw Marshal.GetExceptionForHR(Marshal.GetHRForLastWin32Error());
@@ -31,62 +36,28 @@ namespace RightKeyboard {
 
 			WindowState = FormWindowState.Minimized;
 
-			LoadConfiguration();
+			Theme.StyleMenu(contextMenuStrip);
+			settings.Load();
 		}
 
 		protected override void OnClosed(EventArgs e) {
+			if(keyboardsForm != null) {
+				keyboardsForm.Close();
+			}
+			notifyIcon.Visible = false;
 			base.OnClosed(e);
-			SaveConfiguration();
 		}
 
-		private void SaveConfiguration() {
-			try {
-				string configFilePath = GetConfigFilePath();
-				using(TextWriter output = File.CreateText(configFilePath)) {
-					foreach(KeyValuePair<string, ushort> entry in languageMappings) {
-						output.WriteLine("{0}={1:X04}", entry.Key, entry.Value);
-					}
-				}
+		private void ShowKeyboards() {
+			if(keyboardsForm == null) {
+				keyboardsForm = new KeyboardsForm(settings);
+				keyboardsForm.FormClosed += delegate { keyboardsForm = null; };
+				keyboardsForm.Show();
 			}
-			catch(Exception err) {
-				MessageBox.Show("Could not save the configuration. Reason: " + err.Message);
+			if(keyboardsForm.WindowState == FormWindowState.Minimized) {
+				keyboardsForm.WindowState = FormWindowState.Normal;
 			}
-		}
-
-		private void LoadConfiguration() {
-			try {
-				string configFilePath = GetConfigFilePath();
-				if(File.Exists(configFilePath)) {
-					using(TextReader input = File.OpenText(configFilePath)) {
-						string line;
-						while((line = input.ReadLine()) != null) {
-							int separator = line.LastIndexOf('=');
-							if(separator <= 0) {
-								continue;
-							}
-
-							string deviceName = line.Substring(0, separator);
-							ushort layout;
-							if(ushort.TryParse(line.Substring(separator + 1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out layout)) {
-								// Keep the mapping even if the device isn't connected right now
-								languageMappings[deviceName] = layout;
-							}
-						}
-					}
-				}
-			}
-			catch(Exception err) {
-				MessageBox.Show("Could not load the configuration. Reason: " + err.Message);
-			}
-		}
-
-		private static string GetConfigFilePath() {
-			string configFileDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "RightKeyboard");
-			if(!Directory.Exists(configFileDir)) {
-				Directory.CreateDirectory(configFileDir);
-			}
-
-			return Path.Combine(configFileDir, "config.txt");
+			keyboardsForm.Activate();
 		}
 
 		protected override void OnLoad(EventArgs e) {
@@ -104,6 +75,13 @@ namespace RightKeyboard {
 
 				case API.WM_POWERBROADCAST:
 					ProcessPowerMessage(message);
+					break;
+
+				case API.WM_INPUT_DEVICE_CHANGE:
+					if(keyboardsForm != null) {
+						keyboardsForm.NotifyDevicesChanged();
+					}
+					base.WndProc(ref message);
 					break;
 
 				default:
@@ -188,17 +166,41 @@ namespace RightKeyboard {
 				return;
 			}
 
-			ushort layout;
-			if (!languageMappings.TryGetValue(deviceName, out layout)) {
-				selectingLayout = true;
-				layoutSelectionDialog.ShowDialog();
-				selectingLayout = false;
-				layout = layoutSelectionDialog.Layout.Identifier;
-				languageMappings[deviceName] = layout;
-				SaveConfiguration();
+			if (keyboardsForm != null) {
+				keyboardsForm.NotifyKeyboardUsed(deviceName);
 			}
 
-			ushort currentSysLayout = (ushort)API.GetKeyboardLayout().ToInt32();
+			ushort layout;
+			KeyboardEntry entry = settings.Get(deviceName);
+			if (entry != null) {
+				layout = entry.Layout;
+			}
+			else {
+				if (skippedThisSession.ContainsKey(deviceName)) {
+					return;
+				}
+
+				selectingLayout = true;
+				try {
+					using (LayoutSelectionDialog dialog = new LayoutSelectionDialog(deviceName)) {
+						if (dialog.ShowDialog() != DialogResult.OK) {
+							skippedThisSession[deviceName] = true;
+							return;
+						}
+						layout = dialog.SelectedLayout;
+					}
+				}
+				finally {
+					selectingLayout = false;
+				}
+				settings.SetLayout(deviceName, layout);
+			}
+
+			if (layout == KeyboardSettings.NoSwitch) {
+				return;
+			}
+
+			ushort currentSysLayout = unchecked((ushort)API.GetKeyboardLayout().ToInt64());
 
 			if (currentSysLayout != layout)
 			{
@@ -228,10 +230,25 @@ namespace RightKeyboard {
 			//}
 		}
 
+		private void keyboardsToolStripMenuItem_Click(object sender, EventArgs e) {
+			ShowKeyboards();
+		}
+
+		private void notifyIcon_MouseClick(object sender, MouseEventArgs e) {
+			if(e.Button == MouseButtons.Left) {
+				ShowKeyboards();
+			}
+		}
+
 		private void clearToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			languageMappings.Clear();
-			SaveConfiguration();
+			DialogResult answer = MessageBox.Show(
+				"Forget all saved keyboards?\n\nRightKeyboard will ask for the input method again the next time you type on each keyboard.",
+				"RightKeyboard", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+			if(answer == DialogResult.Yes) {
+				skippedThisSession.Clear();
+				settings.Clear();
+			}
 		}
 
 		private void exitToolStripMenuItem_Click(object sender, EventArgs e) {

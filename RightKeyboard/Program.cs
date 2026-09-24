@@ -9,6 +9,10 @@ namespace RightKeyboard {
 		/// </summary>
 		[STAThread]
 		static void Main() {
+			// Render sharply on high DPI screens instead of being stretched by Windows
+			if(Environment.OSVersion.Version.Major >= 6) {
+				RightKeyboard.Win32.API.SetProcessDPIAware();
+			}
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
 			Application.Run(new MainForm());

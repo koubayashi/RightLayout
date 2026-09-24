@@ -67,6 +67,39 @@ namespace RightKeyboard {
 			return cachedLayouts;
 		}
 
+		/// <summary>
+		/// Gets the input methods installed in Windows, in the user's order, without duplicates
+		/// </summary>
+		public static Layout[] GetInstalledLayouts() {
+			List<Layout> result = new List<Layout>();
+			List<ushort> seen = new List<ushort>();
+			foreach(IntPtr installedLayout in RightKeyboard.Win32.API.GetKeyboardLayoutList()) {
+				ushort languageId = unchecked((ushort)installedLayout.ToInt64());
+				if(!seen.Contains(languageId)) {
+					seen.Add(languageId);
+					result.Add(new Layout(languageId, GetDisplayName(languageId)));
+				}
+			}
+			return result.ToArray();
+		}
+
+		/// <summary>
+		/// Gets a readable name for a language identifier
+		/// </summary>
+		public static string GetDisplayName(ushort identifier) {
+			foreach(Layout layout in GetLayouts()) {
+				if(layout.Identifier == identifier) {
+					return layout.Name;
+				}
+			}
+			try {
+				return CultureInfo.GetCultureInfo(identifier).DisplayName;
+			}
+			catch(ArgumentException) {
+				return identifier.ToString("X4");
+			}
+		}
+
 		private static Layout GetLayout(string line) {
 			string[] parts = line.Trim().Split('=');
 
