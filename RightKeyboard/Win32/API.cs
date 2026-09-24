@@ -204,6 +204,8 @@ namespace RightKeyboard.Win32 {
 		public const int WM_INPUT_DEVICE_CHANGE = 0x00FE;
 		public const int WM_MOUSEWHEEL = 0x020A;
 		public const int EM_SETCUEBANNER = 0x1501;
+		public const int WM_SETICON = 0x0080;
+		public const int ICON_SMALL = 0;
 
 		[DllImport("user32.dll")]
 		public static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
@@ -219,5 +221,34 @@ namespace RightKeyboard.Win32 {
 
 		[DllImport("dwmapi.dll")]
 		public static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
+
+		private const int RT_GROUP_ICON = 14;
+		private const uint IMAGE_ICON = 1;
+
+		private delegate bool EnumResNameProc(IntPtr hModule, IntPtr lpType, IntPtr lpName, IntPtr lParam);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		private static extern bool EnumResourceNames(IntPtr hModule, IntPtr lpType, EnumResNameProc lpEnumFunc, IntPtr lParam);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		private static extern IntPtr LoadImage(IntPtr hinst, IntPtr name, uint type, int cx, int cy, uint fuLoad);
+
+		/// <summary>
+		/// Loads a module's first icon resource at an exact size, or returns IntPtr.Zero.
+		/// Windows picks the best frame itself and, unlike System.Drawing.Icon, handles PNG-compressed frames.
+		/// The caller owns the returned icon handle.
+		/// </summary>
+		public static IntPtr LoadModuleIcon(IntPtr module, int size) {
+			IntPtr groupName = IntPtr.Zero;
+			EnumResourceNames(module, new IntPtr(RT_GROUP_ICON), delegate(IntPtr m, IntPtr type, IntPtr name, IntPtr param) {
+				groupName = name;
+				return false;
+			}, IntPtr.Zero);
+			// The compiler gives the icon a numeric ID; a named resource would need its string copied inside the callback
+			if(groupName == IntPtr.Zero || (groupName.ToInt64() >> 16) != 0) {
+				return IntPtr.Zero;
+			}
+			return LoadImage(module, groupName, IMAGE_ICON, size, size, 0);
+		}
 	}
 }

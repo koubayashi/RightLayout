@@ -44,7 +44,7 @@ namespace RightKeyboard {
 
 		private static readonly float scale = ReadScale();
 
-		private static Icon appIcon;
+		private static readonly System.Collections.Generic.Dictionary<int, Icon> appIcons = new System.Collections.Generic.Dictionary<int, Icon>();
 
 		/// <summary>
 		/// Scales a size given in 96 DPI pixels to the screen's DPI
@@ -53,21 +53,34 @@ namespace RightKeyboard {
 			return (int)Math.Round(pixels * scale);
 		}
 
+		/// <summary>
+		/// Gets the app icon at the window icon size
+		/// </summary>
 		public static Icon AppIcon {
 			get {
-				if(appIcon == null) {
-					try {
-						// The embedded copy has every size, unlike the single one Windows extracts from the exe
-						using(System.IO.Stream input = typeof(Theme).Assembly.GetManifestResourceStream("RightKeyboard.RightLayout.ico")) {
-							appIcon = new Icon(input);
-						}
-					}
-					catch(Exception) {
-						appIcon = SystemIcons.Application;
-					}
-				}
-				return appIcon;
+				return GetAppIcon(SystemInformation.IconSize.Width);
 			}
+		}
+
+		/// <summary>
+		/// Gets the app icon at an exact size, drawn from the matching frame of the exe's icon.
+		/// The icon is only stored once, as the exe icon; Windows loads it because System.Drawing
+		/// can't draw its PNG-compressed frames.
+		/// </summary>
+		public static Icon GetAppIcon(int size) {
+			Icon icon;
+			if(!appIcons.TryGetValue(size, out icon)) {
+				IntPtr handle = IntPtr.Zero;
+				try {
+					handle = API.LoadModuleIcon(System.Runtime.InteropServices.Marshal.GetHINSTANCE(typeof(Theme).Module), size);
+				}
+				catch(Exception) {
+				}
+				// Kept for the life of the app, so the handle is never destroyed
+				icon = handle != IntPtr.Zero ? System.Drawing.Icon.FromHandle(handle) : SystemIcons.Application;
+				appIcons[size] = icon;
+			}
+			return icon;
 		}
 
 		public static void ApplyTo(Form form, Color background) {
@@ -76,6 +89,10 @@ namespace RightKeyboard {
 			form.Font = Body;
 			form.AutoScaleMode = AutoScaleMode.None;
 			form.Icon = AppIcon;
+			// WinForms would shrink the large icon for the title bar; give it the small frame instead
+			form.Load += delegate {
+				API.SendMessage(form.Handle, API.WM_SETICON, new IntPtr(API.ICON_SMALL), GetAppIcon(SystemInformation.SmallIconSize.Width).Handle);
+			};
 			if(IsDark) {
 				form.HandleCreated += delegate { UseDarkTitleBar(form.Handle); };
 			}

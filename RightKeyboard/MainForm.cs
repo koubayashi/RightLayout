@@ -37,7 +37,7 @@ namespace RightKeyboard {
 			WindowState = FormWindowState.Minimized;
 
 			Icon = Theme.AppIcon;
-			notifyIcon.Icon = new Icon(Theme.AppIcon, SystemInformation.SmallIconSize);
+			notifyIcon.Icon = Theme.GetAppIcon(SystemInformation.SmallIconSize.Width);
 			Theme.StyleMenu(contextMenuStrip);
 			settings.Load();
 		}

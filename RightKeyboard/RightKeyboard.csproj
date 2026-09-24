@@ -92,7 +92,7 @@
     <Compile Include="Win32\RAWINPUTHEADER.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="RightLayout.ico" />
+    <None Include="RightLayout.ico" />
     <EmbeddedResource Include="Layouts.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
