@@ -15,7 +15,7 @@ RightLayout is a continuation of [RightKeyboard](https://github.com/gmcouto/Righ
 - **Remembers your keyboards.** Choose an input method once per keyboard. It is kept through sleep, reconnects and restarts until you forget the keyboard.
 - **One entry per physical keyboard.** Windows reports a single keyboard as several devices (main keys, media keys, hotkeys). RightLayout groups them, so your keyboard appears once and every part of it uses the same input method.
 - **Keyboards window.** See all your keyboards by name (for example *AULA-F75 5.0 KB* or *Built-in keyboard*), whether each is connected, and its input method. Change, rename or forget any of them. The keyboard you are typing on is highlighted.
-- **Clear new-keyboard prompt.** Names the keyboard it detected, lets you search your installed input methods, and offers *Don't switch for this keyboard* for keyboards you want left alone.
+- **Clear new-keyboard prompt.** Names the keyboard it detected, lets you search your installed input methods, and offers *Don't switch for this keyboard* for keyboards you want left alone. Keys you were still typing for another window are ignored, never shown.
 - **Windows 11 look.** Follows your light or dark app setting and stays sharp on high-DPI screens.
 
 ## Requirements
@@ -34,9 +34,9 @@ If two layouts belong to the same language, RightLayout can't tell them apart.
 
 ## Installing
 
-1. Get `RightLayout-v4.exe` (see [Building](#building) to build it yourself).
+1. Get `RightLayout-v4.5.exe` (see [Building](#building) to build it yourself).
 2. Press **Windows + R**, type `shell:startup` and press Enter.
-3. Put `RightLayout-v4.exe` (or a shortcut to it) in that folder so it starts when you sign in.
+3. Put `RightLayout-v4.5.exe` (or a shortcut to it) in that folder so it starts when you sign in.
 4. Double-click it to start it now. RightLayout runs in the notification area of the taskbar.
 
 If you used RightKeyboard before, close it first so the two apps don't both react to your typing. Your saved keyboards are copied over automatically.
@@ -82,16 +82,22 @@ The project targets .NET Framework 4 and builds with the MSBuild that ships with
 
 ```powershell
 & "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe" RightKeyboard\RightKeyboard.csproj `
-    /t:Rebuild /p:Configuration=Release /p:AssemblyName=RightLayout-v4 /p:OutDir=..\dist\
+    /t:Rebuild /p:Configuration=Release /p:AssemblyName=RightLayout-v4.5 /p:OutDir=..\dist\
 ```
 
-This produces `dist\RightLayout-v4.exe`, a single file of about 93 KB.
+This produces `dist\RightLayout-v4.5.exe`, a single file of about 93 KB.
 
 Without the .NET Framework 4 targeting pack, MSBuild also copies framework files such as `mscorlib.dll` into `dist`. The app doesn't need them and they can be deleted.
 
 The source still uses the original `RightKeyboard` project and namespace names.
 
 ## Version history
+
+### 4.5
+Security and reliability fixes:
+- Windows DLLs are loaded only from System32. Previously a malicious DLL with the right name placed next to the exe (for example in Downloads) could be loaded.
+- The new-keyboard prompt no longer shows what you were typing. It used to put the cursor in its search box, so text meant for another window, possibly a password, appeared there. Keys pressed in the first 1.5 seconds after it opens are now ignored.
+- An input event Windows can't describe no longer makes the app quit silently.
 
 ### 4.0
 - Renamed to RightLayout, with a new logo.
