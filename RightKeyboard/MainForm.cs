@@ -154,11 +154,18 @@ namespace RightKeyboard {
 		private void ProcessInputMessage(Message message) {
 			RAWINPUTHEADER header;
 			uint result = API.GetRawInputData(message.LParam, API.RID_HEADER, out header);
-			Debug.Assert(result != uint.MaxValue);
 			if(result == uint.MaxValue) {
-				throw Marshal.GetExceptionForHR(Marshal.GetHRForLastWin32Error());
+				// Windows couldn't describe this event; skip it rather than crash on it
+				return;
 			}
-			ValidateCurrentDevice(header.hDevice);
+
+			// This runs for every key press, so one unexpected failure must not stop layout switching
+			try {
+				ValidateCurrentDevice(header.hDevice);
+			}
+			catch(Exception err) {
+				Debug.WriteLine("Could not handle keyboard input: " + err);
+			}
 		}
 
 		private void ValidateCurrentDevice(IntPtr hCurrentDevice) {
