@@ -42,8 +42,17 @@ namespace RightKeyboard {
 			subtitle.AutoSize = true;
 			subtitle.Location = new Point(Theme.S(29), Theme.S(66));
 
+			ModernButton btMenu = new ModernButton("", false);	// GlobalNavigationButton (hamburger)
+			btMenu.Font = Theme.IconFont;
+			btMenu.Size = new Size(Theme.S(40), Theme.S(36));
+			btMenu.Click += delegate { ShowMenu(btMenu); };
+
 			header.Controls.Add(title);
 			header.Controls.Add(subtitle);
+			header.Controls.Add(btMenu);
+			header.Layout += delegate {
+				btMenu.Location = new Point(header.Width - Theme.S(28) - btMenu.Width, Theme.S(26));
+			};
 
 			Panel footer = new Panel();
 			footer.Dock = DockStyle.Bottom;
@@ -284,6 +293,15 @@ namespace RightKeyboard {
 				card.SetActive(true);
 				listPanel.ScrollControlIntoView(card);
 			}
+		}
+
+		private void ShowMenu(Control anchor) {
+			ContextMenuStrip menu = new ContextMenuStrip();
+			menu.Items.Add("Open app location", null, delegate { AppLocations.ShowApp(); });
+			menu.Items.Add("Open settings file location", null, delegate { AppLocations.ShowSettings(); });
+			Theme.StyleMenu(menu);
+			menu.Closed += delegate { BeginInvoke((MethodInvoker)delegate { menu.Dispose(); }); };
+			menu.Show(anchor, new Point(anchor.Width - menu.PreferredSize.Width, anchor.Height + Theme.S(2)));
 		}
 
 		private void ForgetAll() {

@@ -197,6 +197,15 @@ namespace RightKeyboard {
 			return entry;
 		}
 
+		/// <summary>
+		/// Gets the full path of config.txt, creating its folder if needed
+		/// </summary>
+		public static string ConfigFilePath {
+			get {
+				return GetConfigFilePath();
+			}
+		}
+
 		private static string GetConfigFilePath() {
 			string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 			string configFileDir = Path.Combine(localAppData, "RightLayout");

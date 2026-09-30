@@ -252,6 +252,10 @@ namespace RightKeyboard {
 			ShowKeyboards();
 		}
 
+		private void openAppLocationToolStripMenuItem_Click(object sender, EventArgs e) {
+			AppLocations.ShowApp();
+		}
+
 		private void notifyIcon_MouseClick(object sender, MouseEventArgs e) {
 			if(e.Button == MouseButtons.Left) {
 				ShowKeyboards();

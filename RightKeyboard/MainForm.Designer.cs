@@ -27,6 +27,7 @@ namespace RightKeyboard {
 			this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
 			this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
 			this.keyboardsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.openAppLocationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
 			this.clearToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -44,6 +45,7 @@ namespace RightKeyboard {
 			// 
 			this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.keyboardsToolStripMenuItem,
+            this.openAppLocationToolStripMenuItem,
             this.toolStripSeparator,
             this.clearToolStripMenuItem,
             this.exitToolStripMenuItem});
@@ -56,7 +58,13 @@ namespace RightKeyboard {
 			this.keyboardsToolStripMenuItem.Name = "keyboardsToolStripMenuItem";
 			this.keyboardsToolStripMenuItem.Text = "&Keyboards...";
 			this.keyboardsToolStripMenuItem.Click += new System.EventHandler(this.keyboardsToolStripMenuItem_Click);
-			// 
+			//
+			// openAppLocationToolStripMenuItem
+			//
+			this.openAppLocationToolStripMenuItem.Name = "openAppLocationToolStripMenuItem";
+			this.openAppLocationToolStripMenuItem.Text = "Open app &location";
+			this.openAppLocationToolStripMenuItem.Click += new System.EventHandler(this.openAppLocationToolStripMenuItem_Click);
+			//
 			// toolStripSeparator
 			// 
 			this.toolStripSeparator.Name = "toolStripSeparator";
@@ -94,6 +102,7 @@ namespace RightKeyboard {
 		private System.Windows.Forms.NotifyIcon notifyIcon;
 		private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
 		private System.Windows.Forms.ToolStripMenuItem keyboardsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem openAppLocationToolStripMenuItem;
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator;
 		private System.Windows.Forms.ToolStripMenuItem clearToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;

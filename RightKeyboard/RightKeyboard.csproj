@@ -42,6 +42,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AppLocations.cs" />
     <Compile Include="KeyboardDevices.cs" />
     <Compile Include="KeyboardSettings.cs" />
     <Compile Include="KeyboardsForm.cs">
