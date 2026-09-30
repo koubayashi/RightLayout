@@ -15,6 +15,11 @@ namespace RightKeyboard {
 		private readonly ModernButton btOk;
 		private ushort selectedLayout = KeyboardSettings.NoSwitch;
 
+		// The prompt opens while the user is typing somewhere else. Keys pressed right after it appears
+		// were meant for that other window (maybe a password), so they are ignored rather than acted on.
+		private static readonly TimeSpan GracePeriod = TimeSpan.FromMilliseconds(1500);
+		private DateTime shownAt = DateTime.MaxValue;
+
 		public LayoutSelectionDialog(string deviceName) {
 			KeyboardDeviceInfo device = KeyboardDevices.Get(deviceName);
 
@@ -126,10 +131,17 @@ namespace RightKeyboard {
 		protected override void OnShown(EventArgs e) {
 			base.OnShown(e);
 			Activate();
-			searchBox.TextBox.Focus();
+			// Focus the list, not the search box: text still being typed for another window would
+			// otherwise appear on screen in the search box. Typing in the list only jumps to an item.
+			lbLayouts.Focus();
+			shownAt = DateTime.UtcNow;
 		}
 
 		protected override bool ProcessCmdKey(ref Message msg, Keys keyData) {
+			if(DateTime.UtcNow - shownAt < GracePeriod) {
+				// Swallow the key entirely, so e.g. an Enter meant for a login form doesn't pick a layout
+				return true;
+			}
 			if(keyData == Keys.Escape) {
 				DialogResult = DialogResult.Cancel;
 				return true;
