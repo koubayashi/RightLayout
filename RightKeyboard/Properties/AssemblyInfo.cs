@@ -6,6 +6,10 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("RightLayout")]
+
+// Load the Windows DLLs this app calls (cfgmgr32, dwmapi, uxtheme, ...) only from System32, never
+// from the exe's folder, where a planted DLL with the same name would otherwise be picked first
+[assembly: DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]

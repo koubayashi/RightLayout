@@ -216,6 +216,14 @@ namespace RightKeyboard.Win32 {
 		[DllImport("user32.dll")]
 		public static extern bool SetProcessDPIAware();
 
+		public const uint LOAD_LIBRARY_SEARCH_SYSTEM32 = 0x00000800;
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		public static extern bool SetDefaultDllDirectories(uint directoryFlags);
+
+		[DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+		public static extern bool SetDllDirectory(string pathName);
+
 		[DllImport("uxtheme.dll", CharSet = CharSet.Unicode)]
 		public static extern int SetWindowTheme(IntPtr hWnd, string pszSubAppName, string pszSubIdList);
 
