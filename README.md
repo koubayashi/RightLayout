@@ -34,9 +34,9 @@ If two layouts belong to the same language, RightLayout can't tell them apart.
 
 ## Installing
 
-1. Get `RightLayout-v4.5.exe` (see [Building](#building) to build it yourself).
+1. Get `RightLayout-v4.6.exe` (see [Building](#building) to build it yourself).
 2. Press **Windows + R**, type `shell:startup` and press Enter.
-3. Put `RightLayout-v4.5.exe` (or a shortcut to it) in that folder so it starts when you sign in.
+3. Put `RightLayout-v4.6.exe` (or a shortcut to it) in that folder so it starts when you sign in.
 4. Double-click it to start it now. RightLayout runs in the notification area of the taskbar.
 
 If you used RightKeyboard before, close it first so the two apps don't both react to your typing. Your saved keyboards are copied over automatically.
@@ -52,6 +52,7 @@ If you used RightKeyboard before, close it first so the two apps don't both reac
 **The tray icon:**
 
 - **Left-click** or choose **Keyboards...** to open the Keyboards window.
+- **Open app location** opens File Explorer with `RightLayout-v4.6.exe` selected, handy if you forgot where you put it.
 - **Forget all keyboards...** clears every saved keyboard. RightLayout asks again the next time you type on each one.
 - **Exit** closes RightLayout.
 
@@ -61,6 +62,7 @@ If you used RightKeyboard before, close it first so the two apps don't both reac
 - **Other connected keyboards** lists keyboards you haven't set up yet. You can choose their input method before typing on them.
 - The **⋯** button on a keyboard lets you **rename** it or **forget** it.
 - **Mixed, choose one** means different parts of that keyboard were saved with different input methods, usually by an older version. Pick one to fix it.
+- The **☰** menu (top right) has **Open app location** and **Open settings file location**, which opens File Explorer with `config.txt` selected, for example to back it up.
 
 ### How keyboards are recognised
 
@@ -72,7 +74,7 @@ Re-pairing a Bluetooth keyboard can give it a new device name, in which case Rig
 
 ### Where settings are stored
 
-`%LOCALAPPDATA%\RightLayout\config.txt`
+`%LOCALAPPDATA%\RightLayout\config.txt` (open it from **☰ → Open settings file location** in the Keyboards window).
 
 On first run, RightLayout copies `%LOCALAPPDATA%\RightKeyboard\config.txt` if it exists. The old file is left in place.
 
@@ -82,16 +84,20 @@ The project targets .NET Framework 4 and builds with the MSBuild that ships with
 
 ```powershell
 & "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe" RightKeyboard\RightKeyboard.csproj `
-    /t:Rebuild /p:Configuration=Release /p:AssemblyName=RightLayout-v4.5 /p:OutDir=..\dist\
+    /t:Rebuild /p:Configuration=Release /p:AssemblyName=RightLayout-v4.6 /p:OutDir=..\dist\
 ```
 
-This produces `dist\RightLayout-v4.5.exe`, a single file of about 93 KB.
+This produces `dist\RightLayout-v4.6.exe`, a single file of about 96 KB.
 
 Without the .NET Framework 4 targeting pack, MSBuild also copies framework files such as `mscorlib.dll` into `dist`. The app doesn't need them and they can be deleted.
 
 The source still uses the original `RightKeyboard` project and namespace names.
 
 ## Version history
+
+### 4.6
+- **Open app location** in the tray menu shows where RightLayout is running from.
+- New **☰** menu in the Keyboards window with **Open app location** and **Open settings file location**.
 
 ### 4.5
 Security and reliability fixes:
