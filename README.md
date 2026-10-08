@@ -8,7 +8,7 @@ Automatically switch Windows to the right input method for whichever keyboard yo
 
 Use your laptop keyboard in one language and an external keyboard in another: RightLayout notices which keyboard each key press comes from and switches the input method for you. It remembers every keyboard, including Bluetooth keyboards that disconnect and reconnect when the laptop sleeps.
 
-RightLayout is a continuation of [RightKeyboard](https://github.com/gmcouto/RightKeyboard) by Gabriel Couto, which is no longer maintained.
+RightLayout is a continuation of [RightKeyboard](https://github.com/gmcouto/RightKeyboard) by Gabriel Couto, which is no longer maintained. It is free and open source under the [MIT License](LICENSE); see [License and credits](#license-and-credits).
 
 ## Features
 
@@ -34,12 +34,28 @@ If two layouts belong to the same language, RightLayout can't tell them apart.
 
 ## Installing
 
-1. Get `RightLayout-v4.6.exe` (see [Building](#building) to build it yourself).
-2. Press **Windows + R**, type `shell:startup` and press Enter.
-3. Put `RightLayout-v4.6.exe` (or a shortcut to it) in that folder so it starts when you sign in.
-4. Double-click it to start it now. RightLayout runs in the notification area of the taskbar.
+1. Download `RightLayout-v4.7.exe` from the [Releases](../../releases) page (see [Building](#building) to build it yourself), and [check that it wasn't altered](#verifying-the-download).
+2. Put it in a folder of its own, for example `%LOCALAPPDATA%\Programs\RightLayout`. Don't run it from a shared folder such as Downloads: a malicious DLL saved there could be loaded by .NET as the app starts.
+3. Press **Windows + R**, type `shell:startup` and press Enter. Right-click in that folder and choose **New → Shortcut**, pointing to the exe, so RightLayout starts when you sign in.
+4. Double-click the exe to start it now. RightLayout runs in the notification area of the taskbar.
 
-If you used RightKeyboard before, close it first so the two apps don't both react to your typing. Your saved keyboards are copied over automatically.
+If you used RightKeyboard or an earlier RightLayout before, close it first so the two don't both react to your typing, and remove its exe or shortcut from the startup folder. Your saved keyboards are kept.
+
+Windows SmartScreen may warn that the app is from an unknown publisher, because the exe is not code-signed. Choose **More info → Run anyway** after verifying the download.
+
+### Verifying the download
+
+Each release lists the SHA-256 hash of the exe and includes it as a `.sha256` file. In PowerShell, in the folder holding the exe:
+
+```powershell
+Get-FileHash .\RightLayout-v4.7.exe -Algorithm SHA256
+```
+
+The hash shown must match the published one exactly. If it doesn't, delete the file.
+
+### Privacy
+
+RightLayout only reads *which* keyboard each key press comes from, never which key was pressed. It doesn't record or store your typing, has no network access, and runs without administrator rights.
 
 ## Using RightLayout
 
@@ -52,7 +68,7 @@ If you used RightKeyboard before, close it first so the two apps don't both reac
 **The tray icon:**
 
 - **Left-click** or choose **Keyboards...** to open the Keyboards window.
-- **Open app location** opens File Explorer with `RightLayout-v4.6.exe` selected, handy if you forgot where you put it.
+- **Open app location** opens File Explorer with `RightLayout-v4.7.exe` selected, handy if you forgot where you put it.
 - **Forget all keyboards...** clears every saved keyboard. RightLayout asks again the next time you type on each one.
 - **Exit** closes RightLayout.
 
@@ -83,17 +99,28 @@ On first run, RightLayout copies `%LOCALAPPDATA%\RightKeyboard\config.txt` if it
 The project targets .NET Framework 4 and builds with the MSBuild that ships with Windows; Visual Studio is not required.
 
 ```powershell
-& "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe" RightKeyboard\RightKeyboard.csproj `
-    /t:Rebuild /p:Configuration=Release /p:AssemblyName=RightLayout-v4.6 /p:OutDir=..\dist\
+& "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe" RightLayout\RightLayout.csproj `
+    /t:Rebuild /p:Configuration=Release /p:AssemblyName=RightLayout-v4.7 /p:OutDir=..\dist\
 ```
 
-This produces `dist\RightLayout-v4.6.exe`, a single file of about 96 KB.
+This produces `dist\RightLayout-v4.7.exe`, a single file of about 96 KB.
 
 Without the .NET Framework 4 targeting pack, MSBuild also copies framework files such as `mscorlib.dll` into `dist`. The app doesn't need them and they can be deleted.
 
-The source still uses the original `RightKeyboard` project and namespace names.
+Release builds contain no debug symbols, so the exe doesn't include the folder path (and username) of the machine that built it.
 
 ## Version history
+
+### 4.7
+Security and reliability fixes:
+- Listing keyboards could write past the end of a buffer if a device connected at the wrong moment, which could crash the app. Windows is now told the real size of the buffer.
+- The current input method is read from the right window. A truncated thread ID could make RightLayout read the wrong one, so it switched when it didn't need to, and the new-keyboard prompt could preselect the wrong input method.
+- The exe no longer contains the folder path of the machine it was built on.
+- The project, namespace and assembly are renamed from RightKeyboard to RightLayout.
+
+Now open source under the MIT License:
+- All code that came from RightKeyboard has been rewritten (see [License and credits](#license-and-credits)).
+- Input method names now come from Windows instead of a list bundled with the app.
 
 ### 4.6
 - **Open app location** in the tray menu shows where RightLayout is running from.
@@ -129,7 +156,26 @@ Security and reliability fixes:
 - Removed the "current layout cache" and read the current layout from Windows instead, as the cache failed after sleep.
 - Added a *Clear* menu item to clear the configuration.
 
-## Credits
+## License and credits
 
-- [RightKeyboard](https://github.com/gmcouto/RightKeyboard) by Gabriel Couto.
-- Based on the article [Using multiple keyboards with different layouts on the same machine](http://www.codeproject.com/Articles/20994/Using-multiple-keyboards-with-different-layouts-on) on CodeProject.
+RightLayout is released under the [MIT License](LICENSE). Copyright (c) 2026 Koushik.
+
+### Where RightLayout comes from
+
+- [RightKeyboard](https://github.com/gmcouto/RightKeyboard) by Gabriel Couto, which RightLayout continues. Thank you, Gabriel.
+- RightKeyboard was based on the CodeProject article [Using multiple keyboards with different layouts on the same machine](http://www.codeproject.com/Articles/20994/Using-multiple-keyboards-with-different-layouts-on), which showed how to tell keyboards apart with Windows Raw Input and switch the input method for each one.
+
+### Why the code was rewritten
+
+Neither RightKeyboard nor the CodeProject article published a license for its code, and a [request for one](https://github.com/gmcouto/RightKeyboard/issues) has gone unanswered. So that RightLayout can be shared freely, version 4.7 replaces every remaining part of that code with new code:
+
+| Original code | Replaced in 4.7 by |
+| --- | --- |
+| `MainForm` (hidden window, tray icon and menu, layout switching), with its designer and resource files | `TrayApp.cs`: the tray icon and menu built in code, and a separate invisible window that receives keyboard input |
+| Win32 declarations in `API.cs`, `RAWINPUTDEVICE.cs` and `RAWINPUTHEADER.cs` | A new `API.cs` that wraps each Windows call in a small function (listen to keyboards, get a device name, switch language) |
+| `Layout.cs` and the bundled list of language names `Layouts.txt` | A new `Layout.cs` that takes language names from Windows, so no list is bundled |
+| `Program.cs`, `AssemblyInfo.cs`, the `Properties` resource and settings files, the project and solution files | New, minimal files; the unused resource and settings files are gone |
+
+The rest of the app was written for RightLayout from version 3.0 onwards: the Keyboards window, the new-keyboard prompt, keyboard grouping and naming, settings storage, theming and the security fixes.
+
+What remains in common with the original is limited to what any program doing the same job must contain, such as the names and values of the Windows functions and messages involved. The Git history still includes the earlier RightKeyboard code as it was published; the MIT License covers RightLayout's code from version 4.7 on.
