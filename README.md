@@ -103,25 +103,45 @@ The project targets .NET Framework 4 and builds with the MSBuild that ships with
     /t:Rebuild /p:Configuration=Release /p:AssemblyName=RightLayout-v4.7 /p:OutDir=..\dist\
 ```
 
-This produces `dist\RightLayout-v4.7.exe`, a single file of about 96 KB.
+This produces `dist\RightLayout-v4.7.exe`, a single file of about 88 KB.
 
 Without the .NET Framework 4 targeting pack, MSBuild also copies framework files such as `mscorlib.dll` into `dist`. The app doesn't need them and they can be deleted.
 
 Release builds contain no debug symbols, so the exe doesn't include the folder path (and username) of the machine that built it.
 
+### Source files
+
+| File | What it does |
+| --- | --- |
+| `Program.cs` | Starts the app, after limiting where Windows DLLs are loaded from |
+| `TrayApp.cs` | Tray icon and menu; listens to key presses and switches the input method for each keyboard |
+| `KeyboardSettings.cs` | Saves which input method each keyboard uses, in `config.txt` |
+| `KeyboardDevices.cs` | Names keyboards and groups the devices that belong to one physical keyboard |
+| `KeyboardsForm.cs` | The Keyboards window |
+| `LayoutSelectionDialog.cs` | The new-keyboard prompt |
+| `Layout.cs` | The input methods installed in Windows |
+| `Theme.cs`, `ModernControls.cs` | Windows 11 colours, fonts, icons and controls |
+| `AppLocations.cs` | Opens the app or settings folder in File Explorer |
+| `Win32\API.cs`, `Win32\CfgMgr.cs` | Calls into Windows: keyboard input, input methods, device information |
+
 ## Version history
 
 ### 4.7
-Security and reliability fixes:
-- Listing keyboards could write past the end of a buffer if a device connected at the wrong moment, which could crash the app. Windows is now told the real size of the buffer.
-- The current input method is read from the right window. A truncated thread ID could make RightLayout read the wrong one, so it switched when it didn't need to, and the new-keyboard prompt could preselect the wrong input method.
-- Typing while a RightLayout window has focus now switches the input method right away. Before, Windows kept showing the old one until you clicked another window.
-- The exe no longer contains the folder path of the machine it was built on.
-- The project, namespace and assembly are renamed from RightKeyboard to RightLayout.
+First public release of RightLayout, now open source under the MIT License.
 
-Now open source under the MIT License:
-- All code that came from RightKeyboard has been rewritten (see [License and credits](#license-and-credits)).
+Fixes:
+- Typing while a RightLayout window has focus now switches the input method right away. Before, Windows kept showing the old one until you clicked another window.
+- The current input method is read from the right window. A truncated thread ID could make RightLayout read the wrong one, so it switched when it didn't need to, and the new-keyboard prompt could preselect the wrong input method.
+
+Security:
+- Listing keyboards could write past the end of a buffer if a device connected at the wrong moment, which could crash the app. Windows is now told the real size of the buffer.
+- The exe no longer contains the folder path (and username) of the machine it was built on.
+- Release downloads come with a SHA-256 hash to [check that they weren't altered](#verifying-the-download).
+
+Code and license:
+- All code that came from RightKeyboard has been rewritten, so RightLayout can be published under the MIT License (see [License and credits](#license-and-credits)).
 - Input method names now come from Windows instead of a list bundled with the app.
+- The project, namespace and assembly are renamed from RightKeyboard to RightLayout.
 
 ### 4.6
 - **Open app location** in the tray menu shows where RightLayout is running from.
