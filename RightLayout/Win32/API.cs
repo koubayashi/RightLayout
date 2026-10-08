@@ -156,10 +156,15 @@ namespace RightLayout.Win32 {
 		private static extern IntPtr GetForegroundWindow();
 
 		[DllImport("user32.dll")]
-		private static extern uint GetWindowThreadProcessId(IntPtr window, IntPtr processId);
+		private static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
 
 		[DllImport("user32.dll")]
 		private static extern IntPtr GetKeyboardLayout(uint threadId);
+
+		private const uint KLF_SETFORPROCESS = 0x00000100;
+
+		[DllImport("user32.dll")]
+		private static extern IntPtr ActivateKeyboardLayout(IntPtr layout, uint flags);
 
 		[DllImport("user32.dll")]
 		private static extern int GetKeyboardLayoutList(int count, [Out] IntPtr[] layouts);
@@ -181,8 +186,25 @@ namespace RightLayout.Win32 {
 		/// Gets the language of the input method used by the window the user is typing in
 		/// </summary>
 		public static ushort GetForegroundLanguage() {
-			uint threadId = GetWindowThreadProcessId(GetForegroundWindow(), IntPtr.Zero);
+			uint processId;
+			uint threadId = GetWindowThreadProcessId(GetForegroundWindow(), out processId);
 			return LanguageOf(GetKeyboardLayout(threadId));
+		}
+
+		/// <summary>
+		/// Gets the input methods installed in Windows (keyboard layout handles), in the user's order
+		/// </summary>
+		private static IntPtr[] GetInstalledLayouts() {
+			int count = GetKeyboardLayoutList(0, null);
+			if(count <= 0) {
+				return new IntPtr[0];
+			}
+			IntPtr[] layouts = new IntPtr[count];
+			count = GetKeyboardLayoutList(layouts.Length, layouts);
+			if(count < layouts.Length) {
+				Array.Resize(ref layouts, Math.Max(count, 0));
+			}
+			return layouts;
 		}
 
 		/// <summary>
@@ -190,14 +212,8 @@ namespace RightLayout.Win32 {
 		/// </summary>
 		public static List<ushort> GetInstalledLanguages() {
 			List<ushort> languages = new List<ushort>();
-			int count = GetKeyboardLayoutList(0, null);
-			if(count <= 0) {
-				return languages;
-			}
-			IntPtr[] layouts = new IntPtr[count];
-			count = GetKeyboardLayoutList(layouts.Length, layouts);
-			for(int i = 0; i < count; ++i) {
-				ushort language = LanguageOf(layouts[i]);
+			foreach(IntPtr layout in GetInstalledLayouts()) {
+				ushort language = LanguageOf(layout);
 				if(!languages.Contains(language)) {
 					languages.Add(language);
 				}
@@ -215,6 +231,20 @@ namespace RightLayout.Win32 {
 			// The default input method's handle repeats the language in its high word, e.g. 0x04090409
 			IntPtr defaultLayout = new IntPtr(unchecked((int)(((uint)language << 16) | language)));
 			SystemParametersInfo(SPI_SETDEFAULTINPUTLANG, 0, new IntPtr[] { defaultLayout }, SPIF_SENDCHANGE);
+
+			// When one of RightLayout's own windows has focus, the broadcast changes this app's input method
+			// without telling the window, so Windows keeps showing the old one until focus moves elsewhere.
+			// Switching directly announces the change to the active window.
+			uint processId;
+			GetWindowThreadProcessId(GetForegroundWindow(), out processId);
+			if(processId == (uint)System.Diagnostics.Process.GetCurrentProcess().Id) {
+				foreach(IntPtr layout in GetInstalledLayouts()) {
+					if(LanguageOf(layout) == language) {
+						ActivateKeyboardLayout(layout, KLF_SETFORPROCESS);
+						break;
+					}
+				}
+			}
 		}
 
 		#endregion

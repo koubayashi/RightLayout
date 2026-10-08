@@ -115,6 +115,7 @@ Release builds contain no debug symbols, so the exe doesn't include the folder p
 Security and reliability fixes:
 - Listing keyboards could write past the end of a buffer if a device connected at the wrong moment, which could crash the app. Windows is now told the real size of the buffer.
 - The current input method is read from the right window. A truncated thread ID could make RightLayout read the wrong one, so it switched when it didn't need to, and the new-keyboard prompt could preselect the wrong input method.
+- Typing while a RightLayout window has focus now switches the input method right away. Before, Windows kept showing the old one until you clicked another window.
 - The exe no longer contains the folder path of the machine it was built on.
 - The project, namespace and assembly are renamed from RightKeyboard to RightLayout.
 
