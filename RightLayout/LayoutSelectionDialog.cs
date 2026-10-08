@@ -158,7 +158,7 @@ namespace RightLayout {
 		}
 
 		private void SelectCurrentLayout() {
-			ushort current = unchecked((ushort)API.GetKeyboardLayout().ToInt64());
+			ushort current = API.GetForegroundLanguage();
 			for(int i = 0; i < lbLayouts.Items.Count; ++i) {
 				if(((Layout)lbLayouts.Items[i]).Identifier == current) {
 					lbLayouts.SelectedIndex = i;

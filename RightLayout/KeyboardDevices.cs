@@ -169,12 +169,10 @@ namespace RightLayout {
 		/// </summary>
 		public static List<string> GetConnected() {
 			List<string> result = new List<string>();
-			foreach(API.RAWINPUTDEVICELIST device in API.GetRawInputDeviceList()) {
-				if(device.dwType == API.RIM_TYPEKEYBOARD) {
-					string deviceName = API.GetRawInputDeviceName(device.hDevice);
-					if(!string.IsNullOrEmpty(deviceName)) {
-						result.Add(deviceName);
-					}
+			foreach(IntPtr keyboard in API.GetKeyboardHandles()) {
+				string deviceName = API.GetDeviceName(keyboard);
+				if(!string.IsNullOrEmpty(deviceName)) {
+					result.Add(deviceName);
 				}
 			}
 			return result;

@@ -143,12 +143,12 @@ namespace RightLayout {
 
 		public void Load() {
 			try {
-				string configFilePath = GetConfigFilePath();
-				if(!File.Exists(configFilePath)) {
+				string path = GetConfigFilePath();
+				if(!File.Exists(path)) {
 					return;
 				}
 
-				foreach(string line in File.ReadAllLines(configFilePath)) {
+				foreach(string line in File.ReadAllLines(path)) {
 					KeyboardEntry entry = ParseLine(line);
 					if(entry != null) {
 						// Keep the mapping even if the device isn't connected right now
@@ -209,10 +209,8 @@ namespace RightLayout {
 		private static string GetConfigFilePath() {
 			string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 			string configFileDir = Path.Combine(localAppData, "RightLayout");
-			if(!Directory.Exists(configFileDir)) {
-				Directory.CreateDirectory(configFileDir);
-			}
-
+			// Does nothing when the folder already exists
+			Directory.CreateDirectory(configFileDir);
 			string configFilePath = Path.Combine(configFileDir, "config.txt");
 
 			// Bring over the keyboards saved when the app was called RightKeyboard; the old file is left
