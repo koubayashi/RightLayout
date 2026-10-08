@@ -4,7 +4,7 @@
 
 # RightLayout
 
-Automatically switch Windows to the right input method for whichever keyboard you type on.
+Give each keyboard its own layout on Windows. RightLayout switches automatically when you type on it.
 
 Use your laptop keyboard in one language and an external keyboard in another: RightLayout notices which keyboard each key press comes from and switches the input method for you. It remembers every keyboard, including Bluetooth keyboards that disconnect and reconnect when the laptop sleeps.
 
