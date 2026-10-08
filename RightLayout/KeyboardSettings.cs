@@ -5,7 +5,7 @@ using System.IO;
 using System.Text;
 using System.Windows.Forms;
 
-namespace RightKeyboard {
+namespace RightLayout {
 	/// <summary>
 	/// A keyboard RightLayout remembers
 	/// </summary>

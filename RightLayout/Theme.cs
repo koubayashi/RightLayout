@@ -4,9 +4,9 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Text;
 using System.Windows.Forms;
 using Microsoft.Win32;
-using RightKeyboard.Win32;
+using RightLayout.Win32;
 
-namespace RightKeyboard {
+namespace RightLayout {
 	/// <summary>
 	/// Colors, fonts and sizes for the Windows 11 style UI. Follows the Windows light/dark app setting.
 	/// </summary>

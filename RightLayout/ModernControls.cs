@@ -2,9 +2,9 @@ using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
-using RightKeyboard.Win32;
+using RightLayout.Win32;
 
-namespace RightKeyboard {
+namespace RightLayout {
 	/// <summary>
 	/// Rounded button, either filled with the accent color (primary) or neutral
 	/// </summary>

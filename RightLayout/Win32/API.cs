@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 using System.Text;
 
-namespace RightKeyboard.Win32 {
+namespace RightLayout.Win32 {
 	/// <summary>
 	/// Exposes the Win32 API functions
 	/// </summary>

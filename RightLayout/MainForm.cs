@@ -5,13 +5,13 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
-using RightKeyboard.Win32;
+using RightLayout.Win32;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.IO;
 using System.Globalization;
 
-namespace RightKeyboard {
+namespace RightLayout {
 	public partial class MainForm : Form {
 		private bool selectingLayout = false;
 

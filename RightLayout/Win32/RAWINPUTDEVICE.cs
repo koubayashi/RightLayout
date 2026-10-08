@@ -2,7 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-namespace RightKeyboard.Win32 {
+namespace RightLayout.Win32 {
 	[StructLayout(LayoutKind.Sequential)]
 	public struct RAWINPUTDEVICE {
 		ushort usUsagePage;

@@ -2,7 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace RightKeyboard.Win32 {
+namespace RightLayout.Win32 {
 	/// <summary>
 	/// Exposes the Configuration Manager (cfgmgr32) functions used to look up device names
 	/// </summary>

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace RightKeyboard {
+namespace RightLayout {
 	/// <summary>
 	/// Lists every keyboard with its input method, and lets the user change, rename or forget them
 	/// </summary>
@@ -146,7 +146,7 @@ namespace RightKeyboard {
 				}
 			}
 
-			Layout[] installedLayouts = RightKeyboard.Layout.GetInstalledLayouts();
+			Layout[] installedLayouts = RightLayout.Layout.GetInstalledLayouts();
 			List<KeyboardGroup> saved = new List<KeyboardGroup>();
 			List<KeyboardGroup> others = new List<KeyboardGroup>();
 			foreach(KeyboardGroup group in KeyboardGroup.Build(settings.GetAll(), KeyboardDevices.GetConnected())) {
@@ -426,7 +426,7 @@ namespace RightKeyboard {
 			}
 
 			if(known && !found && group.Layout != KeyboardSettings.NoSwitch) {
-				selected = new LayoutChoice(group.Layout, RightKeyboard.Layout.GetDisplayName(group.Layout) + " (not installed)", false);
+				selected = new LayoutChoice(group.Layout, RightLayout.Layout.GetDisplayName(group.Layout) + " (not installed)", false);
 				layoutBox.Items.Add(selected);
 			}
 

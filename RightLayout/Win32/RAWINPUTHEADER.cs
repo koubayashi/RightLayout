@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace RightKeyboard.Win32 {
+namespace RightLayout.Win32 {
 	[StructLayout(LayoutKind.Sequential)]
 	public class RAWINPUTHEADER {
 		public uint dwType;

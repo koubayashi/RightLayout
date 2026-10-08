@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace RightKeyboard.Properties {
+namespace RightLayout.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

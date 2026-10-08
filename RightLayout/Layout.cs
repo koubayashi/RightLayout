@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Collections.Generic;
 using System.Globalization;
 
-namespace RightKeyboard {
+namespace RightLayout {
 	/// <summary>
 	/// Represents a keyboard layout
 	/// </summary>
@@ -54,7 +54,7 @@ namespace RightKeyboard {
 		public static Layout[] GetLayouts() {
 			if(cachedLayouts == null) {
 				List<Layout> layouts = new List<Layout>();
-				using(Stream input = Assembly.GetExecutingAssembly().GetManifestResourceStream("RightKeyboard.Layouts.txt")) {
+				using(Stream input = Assembly.GetExecutingAssembly().GetManifestResourceStream("RightLayout.Layouts.txt")) {
 					using(TextReader reader = new StreamReader(input)) {
 						string line;
 						while((line = reader.ReadLine()) != null) {
@@ -73,7 +73,7 @@ namespace RightKeyboard {
 		public static Layout[] GetInstalledLayouts() {
 			List<Layout> result = new List<Layout>();
 			List<ushort> seen = new List<ushort>();
-			foreach(IntPtr installedLayout in RightKeyboard.Win32.API.GetKeyboardLayoutList()) {
+			foreach(IntPtr installedLayout in RightLayout.Win32.API.GetKeyboardLayoutList()) {
 				ushort languageId = unchecked((ushort)installedLayout.ToInt64());
 				if(!seen.Contains(languageId)) {
 					seen.Add(languageId);

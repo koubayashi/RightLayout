@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
 
-namespace RightKeyboard {
+namespace RightLayout {
 	/// <summary>
 	/// Opens the app's folders in File Explorer, so users can find the exe or back up their settings
 	/// </summary>

@@ -1,15 +1,15 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
-using RightKeyboard.Win32;
+using RightLayout.Win32;
 
-namespace RightKeyboard {
+namespace RightLayout {
 	/// <summary>
 	/// Asks which input method a newly detected keyboard should use.
 	/// OK: SelectedLayout holds the choice (possibly KeyboardSettings.NoSwitch). Cancel: ask again next session.
 	/// </summary>
 	public class LayoutSelectionDialog : Form {
-		private readonly Layout[] installedLayouts = RightKeyboard.Layout.GetInstalledLayouts();
+		private readonly Layout[] installedLayouts = RightLayout.Layout.GetInstalledLayouts();
 		private readonly SearchBox searchBox;
 		private readonly ModernListBox lbLayouts;
 		private readonly ModernButton btOk;

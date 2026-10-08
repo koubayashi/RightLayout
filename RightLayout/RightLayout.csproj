@@ -7,8 +7,8 @@
     <ProjectGuid>{D9A15FB8-E81F-4472-8DF4-948E083AE6BC}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>RightKeyboard</RootNamespace>
-    <AssemblyName>RightKeyboard</AssemblyName>
+    <RootNamespace>RightLayout</RootNamespace>
+    <AssemblyName>RightLayout</AssemblyName>
     <ApplicationIcon>RightLayout.ico</ApplicationIcon>
     <FileUpgradeFlags>
     </FileUpgradeFlags>

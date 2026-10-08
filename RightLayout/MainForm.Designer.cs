@@ -1,4 +1,4 @@
-namespace RightKeyboard {
+namespace RightLayout {
 	partial class MainForm {
 		/// <summary>
 		/// Required designer variable.

@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using RightKeyboard.Win32;
+using RightLayout.Win32;
 
-namespace RightKeyboard {
+namespace RightLayout {
 	public enum KeyboardKind {
 		Other,
 		BuiltIn,
