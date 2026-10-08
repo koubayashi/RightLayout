@@ -73,9 +73,16 @@ namespace RightLayout.Win32 {
 
 			RAWINPUTDEVICELIST[] deviceList = new RAWINPUTDEVICELIST[nDevices];
 
-			uint size = nDevices * (uint)Marshal.SizeOf(typeof(RAWINPUTDEVICELIST));
-			res = GetRawInputDeviceList(deviceList, ref size, Marshal.SizeOf(typeof(RAWINPUTDEVICELIST)));
-			Debug.Assert(res == nDevices);
+			// The count passed in is how many entries the array holds, so Windows never writes past its end
+			uint capacity = nDevices;
+			res = GetRawInputDeviceList(deviceList, ref capacity, Marshal.SizeOf(typeof(RAWINPUTDEVICELIST)));
+			if(res < 0) {
+				// A device was added between the two calls; the device change notification triggers another refresh
+				return new RAWINPUTDEVICELIST[0];
+			}
+			if(res < deviceList.Length) {
+				Array.Resize(ref deviceList, res);
+			}
 			return deviceList;
 		}
 
@@ -166,7 +173,7 @@ namespace RightLayout.Win32 {
 		private static extern IntPtr GetForegroundWindow();
 
 		[DllImport("user32.dll")]
-		private static extern IntPtr GetWindowThreadProcessId(IntPtr hWnd, uint lpdwProcessId);
+		private static extern uint GetWindowThreadProcessId(IntPtr hWnd, IntPtr lpdwProcessId);
 
 		[DllImport("user32.dll")]
 		private static extern IntPtr GetKeyboardLayout(uint thread);
@@ -183,8 +190,9 @@ namespace RightLayout.Win32 {
 
 		public static IntPtr GetKeyboardLayout()
 		{
-			IntPtr WinThreadProcId = GetWindowThreadProcessId(GetForegroundWindow(),0);
-			return GetKeyboardLayout((ushort)WinThreadProcId);
+			// The full 32-bit thread ID: thread IDs above 65535 are common, and a truncated one names the wrong thread
+			uint threadId = GetWindowThreadProcessId(GetForegroundWindow(), IntPtr.Zero);
+			return GetKeyboardLayout(threadId);
 		}
 
 		public const int SPI_SETDEFAULTINPUTLANG = 90;
